@@ -1,0 +1,11 @@
+# Pinned, CPU-only stack for the first-boot federated round.
+# The +cpu local version forces the small CPU PyTorch wheel from the PyTorch
+# index (no CUDA, no GPU assumptions) on Linux — used by CI and the Docker image.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.5.1+cpu
+flwr==1.13.1
+fastapi==0.115.6
+uvicorn==0.34.0
+numpy==2.1.3
+pytest==8.3.4
