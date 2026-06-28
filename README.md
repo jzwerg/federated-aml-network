@@ -57,7 +57,7 @@ See [`docs/product/brief.md`](./docs/product/brief.md) for the product thinking 
 ## Run it
 
 ```bash
-docker-compose up        # Flower server + 3 isolated bank nodes
+docker compose up        # Flower server + 3 isolated bank nodes  (or: make up)
 ```
 
 This is a simulation you run, not a site you visit — and the proof is in CI. Every push runs the attack demo in GitHub Actions: a membership-inference attack **succeeds against the vanilla model and fails once differential privacy is enabled**, with the ε budget reported. A green check means the privacy guarantee is real, not claimed.
