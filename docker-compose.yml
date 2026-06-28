@@ -1,0 +1,60 @@
+# First-boot skeleton — a Flower server + 3 isolated bank-node clients.
+# Goal of this file: `docker compose up` completes at least one federated round
+# across three nodes that never share raw data. The membership-inference
+# attack/defense demo is the NEXT milestone (see MILESTONE.md / PLAN.md).
+#
+# Each bank gets its OWN service with its OWN data — no shared volumes for raw
+# data, by design. Host ports for this project live in the 82xx range.
+
+x-bank: &bank
+  build: .                         # TODO(session): add Dockerfile (Python)
+  command: ["python", "-m", "client"]   # TODO(session): real client entrypoint
+  depends_on:
+    server: { condition: service_started }
+  environment:
+    SERVER_ADDRESS: "server:8080"
+    DP_ENABLED: "${DP_ENABLED:-true}"
+    EPSILON: "${EPSILON:-5.0}"
+
+services:
+  server:
+    build: .                       # TODO(session): add Dockerfile (Python)
+    command: ["python", "-m", "server"]   # TODO(session): real server entrypoint
+    environment:
+      NUM_ROUNDS: "${NUM_ROUNDS:-3}"
+      MIN_CLIENTS: "${MIN_CLIENTS:-3}"
+    ports:
+      - "8200:8000"                # FastAPI metrics endpoint
+      # 8080 (Flower gRPC) stays internal to the compose network
+
+  bank-a:
+    <<: *bank
+    environment:
+      SERVER_ADDRESS: "server:8080"
+      BANK_ID: "bank-a"
+      DP_ENABLED: "${DP_ENABLED:-true}"
+      EPSILON: "${EPSILON:-5.0}"
+    volumes: [bank-a-data:/data]
+
+  bank-b:
+    <<: *bank
+    environment:
+      SERVER_ADDRESS: "server:8080"
+      BANK_ID: "bank-b"
+      DP_ENABLED: "${DP_ENABLED:-true}"
+      EPSILON: "${EPSILON:-5.0}"
+    volumes: [bank-b-data:/data]
+
+  bank-c:
+    <<: *bank
+    environment:
+      SERVER_ADDRESS: "server:8080"
+      BANK_ID: "bank-c"
+      DP_ENABLED: "${DP_ENABLED:-true}"
+      EPSILON: "${EPSILON:-5.0}"
+    volumes: [bank-c-data:/data]
+
+volumes:
+  bank-a-data:
+  bank-b-data:
+  bank-c-data:

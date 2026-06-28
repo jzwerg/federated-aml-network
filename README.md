@@ -8,6 +8,8 @@
 **Skill signal:** Distributed machine learning · privacy-preserving computation · regulatory-aware engineering
 **Region anchor:** EU (GDPR) + US (FinCEN / Bank Secrecy Act)
 
+[![CI](https://github.com/jzwerg/federated-aml-network/actions/workflows/ci.yml/badge.svg)](https://github.com/jzwerg/federated-aml-network/actions/workflows/ci.yml)
+
 ---
 
 ## Why this exists
@@ -51,6 +53,16 @@ Raw data never leaves a node. Only clipped, noised model updates cross the bound
 - **Attack/defense demo:** a membership-inference attack that *succeeds* against a vanilla federated model and *fails* once differential privacy is enabled, with the privacy budget (ε) made explicit.
 
 See [`docs/product/brief.md`](./docs/product/brief.md) for the product thinking (users, success metrics, non-goals, risks), [`PLAN.md`](./PLAN.md) for the full build plan, and [`docs/adr/`](./docs/adr/) for engineering decisions.
+
+## Run it
+
+```bash
+docker compose up        # Flower server + 3 isolated bank nodes  (or: make up)
+```
+
+This is a simulation you run, not a site you visit — and the proof is in CI. Every push runs the attack demo in GitHub Actions: a membership-inference attack **succeeds against the vanilla model and fails once differential privacy is enabled**, with the ε budget reported. A green check means the privacy guarantee is real, not claimed.
+
+> 🎬 *A terminal recording of the attack/defense demo will live here.*
 
 ## Status
 
