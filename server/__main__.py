@@ -21,7 +21,7 @@ METRICS = {
     "num_rounds_target": int(os.environ.get("NUM_ROUNDS", "3")),
     "min_clients": int(os.environ.get("MIN_CLIENTS", "3")),
     "latest_loss": None,
-    "latest_accuracy": None,
+    "latest_auc": None,
 }
 
 app = FastAPI(title="Federated AML Network — metrics")
@@ -57,13 +57,14 @@ class MetricsFedAvg(fl.server.strategy.FedAvg):
 
     def aggregate_evaluate(self, server_round, results, failures):
         aggregated = super().aggregate_evaluate(server_round, results, failures)
-        accs = [
-            r.metrics["accuracy"]
+        aucs = [
+            r.metrics["auc"]
             for _, r in results
-            if r.metrics and "accuracy" in r.metrics
+            if r.metrics and "auc" in r.metrics
         ]
-        if accs:
-            METRICS["latest_accuracy"] = sum(accs) / len(accs)
+        if aucs:
+            METRICS["latest_auc"] = sum(aucs) / len(aucs)
+            log.info("round %d: mean local AUC %.4f", server_round, METRICS["latest_auc"])
         return aggregated
 
 

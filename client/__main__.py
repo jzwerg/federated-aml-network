@@ -14,21 +14,33 @@ import torch
 import torch.nn as nn
 
 from common.data import load_tensors
-from common.model import TabularNet, get_parameters, set_parameters
+from common.metrics import roc_auc
+from common.model import TabularNet, fraud_scores, get_parameters, set_parameters
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [client] %(message)s")
 log = logging.getLogger("client")
 
-LOCAL_EPOCHS = 3
+LOCAL_EPOCHS = 5
 LEARNING_RATE = 0.05
+VAL_FRACTION = 0.2
+
+
+def _train_val_split(X: torch.Tensor, y: torch.Tensor, bank_id: str):
+    """Deterministic per-bank split so evaluate() reports held-out (not in-sample) AUC."""
+    n_val = max(1, int(len(X) * VAL_FRACTION))
+    seed = sum(ord(c) for c in bank_id)
+    perm = torch.randperm(len(X), generator=torch.Generator().manual_seed(seed))
+    val_idx, train_idx = perm[:n_val], perm[n_val:]
+    return X[train_idx], y[train_idx], X[val_idx], y[val_idx]
 
 
 class BankClient(fl.client.NumPyClient):
     def __init__(self, bank_id: str, X: torch.Tensor, y: torch.Tensor):
         self.bank_id = bank_id
         self.model = TabularNet()
-        self.X = X
-        self.y = y
+        self.X_train, self.y_train, self.X_val, self.y_val = _train_val_split(
+            X, y, bank_id
+        )
         self.loss_fn = nn.CrossEntropyLoss()
 
     def get_parameters(self, config):
@@ -41,20 +53,23 @@ class BankClient(fl.client.NumPyClient):
         loss = torch.tensor(0.0)
         for _ in range(LOCAL_EPOCHS):
             optimizer.zero_grad()
-            loss = self.loss_fn(self.model(self.X), self.y)
+            loss = self.loss_fn(self.model(self.X_train), self.y_train)
             loss.backward()
             optimizer.step()
         log.info("[%s] local fit done, loss=%.4f", self.bank_id, loss.item())
-        return get_parameters(self.model), len(self.X), {"loss": float(loss.item())}
+        return (
+            get_parameters(self.model),
+            len(self.X_train),
+            {"loss": float(loss.item())},
+        )
 
     def evaluate(self, parameters, config):
         set_parameters(self.model, parameters)
-        self.model.eval()
         with torch.no_grad():
-            logits = self.model(self.X)
-            loss = self.loss_fn(logits, self.y)
-            acc = (logits.argmax(dim=1) == self.y).float().mean().item()
-        return float(loss.item()), len(self.X), {"accuracy": acc}
+            loss = self.loss_fn(self.model(self.X_val), self.y_val)
+        auc = roc_auc(self.y_val.cpu().numpy(), fraud_scores(self.model, self.X_val))
+        log.info("[%s] local eval: loss=%.4f auc=%.4f", self.bank_id, loss.item(), auc)
+        return float(loss.item()), len(self.X_val), {"auc": float(auc)}
 
 
 def main() -> None:

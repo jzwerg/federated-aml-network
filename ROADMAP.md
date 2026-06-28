@@ -23,7 +23,7 @@ the working stack as part of M1.
 
 ---
 
-## M1 — Real data + the utility story  *(highest value; everything depends on it)*
+## M1 — Real data + the utility story  ✅ done  *(highest value; everything depends on it)*
 
 Replace the random-noise placeholder data with synthetic transactions that carry
 the signal the product is about, and prove that federating actually helps.
@@ -101,7 +101,7 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 | Roadmap | `PLAN.md` milestone(s) |
 | --- | --- |
 | M0 (done) | 3 — Federated orchestration (skeleton) |
-| M1 | 1 — Synthetic generator · 2 — Local model + training |
+| M1 (done) | 1 — Synthetic generator · 2 — Local model + training |
 | M2 | 4 — Differential privacy layer |
 | M3 | 5 — Attack demo |
 | M4 | 6 — Polish |

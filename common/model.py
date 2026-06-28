@@ -1,8 +1,9 @@
-"""A trivial tabular classifier shared across nodes.
+"""The shared tabular fraud/AML classifier.
 
-This is deliberately small — the milestone only needs *a* model that can train
-and have its weights averaged. The realistic fraud-typology model arrives in a
-later milestone (see PLAN.md).
+A small MLP over the synthetic transaction features defined in ``common.data``.
+Every node trains an identical architecture so FedAvg can average weights. The DP
+layer and the membership-inference attack are still later milestones (see
+``ROADMAP.md``).
 """
 
 from collections import OrderedDict
@@ -12,8 +13,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-# Number of input features in the synthetic transaction vectors.
-N_FEATURES = 8
+# Number of input features in the synthetic transaction vectors
+# (kept in sync with the feature schema in ``common.data``).
+N_FEATURES = 12
 N_CLASSES = 2  # fraud / not-fraud
 
 
@@ -23,13 +25,28 @@ class TabularNet(nn.Module):
     def __init__(self, n_features: int = N_FEATURES, n_classes: int = N_CLASSES):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_features, 16),
+            nn.Linear(n_features, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
             nn.ReLU(),
             nn.Linear(16, n_classes),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
+
+
+def fraud_scores(model: nn.Module, X: torch.Tensor) -> np.ndarray:
+    """Per-row fraud score (logit margin for the fraud class) as a NumPy array.
+
+    AUC is invariant to monotonic transforms, so the raw class-1 vs class-0 logit
+    margin is a fine ranking score — no softmax needed.
+    """
+    model.eval()
+    with torch.no_grad():
+        logits = model(X)
+        margin = logits[:, 1] - logits[:, 0]
+    return margin.cpu().numpy()
 
 
 def get_parameters(model: nn.Module) -> List[np.ndarray]:
