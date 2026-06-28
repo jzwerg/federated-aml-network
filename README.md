@@ -1,7 +1,10 @@
 # Federated AML Network
 
-> Multiple banks collaboratively train a shared anti-money-laundering / fraud model **without any bank exposing its raw transaction data** — and with differential privacy applied so the *trained model itself* cannot be used to reverse-engineer an individual's data.
+> Money-laundering rings span multiple banks — but no single bank can see the whole pattern, and privacy law (GDPR, banking secrecy, FinCEN) forbids pooling raw transaction data. **Federated AML Network lets banks catch what they can't see alone:** they collaboratively train a shared fraud/AML model without any bank exposing its raw data, and differential privacy bounds what the trained model itself can leak about any individual.
+>
+> *Under the hood: Flower + FedAvg across isolated bank nodes, Opacus differential privacy with an explicit ε budget, demonstrated by an attack that succeeds without DP and fails with it.*
 
+**For:** bank financial-crime / data-science teams — a consortium tool whose value grows with each bank that joins.
 **Skill signal:** Distributed machine learning · privacy-preserving computation · regulatory-aware engineering
 **Region anchor:** EU (GDPR) + US (FinCEN / Bank Secrecy Act)
 
@@ -47,7 +50,7 @@ Raw data never leaves a node. Only clipped, noised model updates cross the bound
 - **Non-IID data** across banks (each bank sees a different fraud distribution) — realistic, and harder than the usual toy demo.
 - **Attack/defense demo:** a membership-inference attack that *succeeds* against a vanilla federated model and *fails* once differential privacy is enabled, with the privacy budget (ε) made explicit.
 
-See [`PLAN.md`](./PLAN.md) for the full build plan and [`docs/adr/`](./docs/adr/) for engineering decisions.
+See [`docs/product/brief.md`](./docs/product/brief.md) for the product thinking (users, success metrics, non-goals, risks), [`PLAN.md`](./PLAN.md) for the full build plan, and [`docs/adr/`](./docs/adr/) for engineering decisions.
 
 ## Status
 
