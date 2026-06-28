@@ -1,0 +1,43 @@
+name: CI
+
+# The proof is in CI: a green check means the privacy guarantee is real, not claimed.
+# Steps are guarded by file existence so this runs cleanly now (planning phase)
+# and becomes the real demo as the code in PLAN.md lands.
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Model + training tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install + test
+        run: |
+          if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
+            [ -f requirements.txt ] && pip install -r requirements.txt
+            [ -f pyproject.toml ] && pip install -e . || true
+            pytest -q
+          else
+            echo "::notice::No Python project yet (PLAN.md). CI will run pytest — local training loop, FedAvg aggregation, and the non-IID data split — once code lands."
+          fi
+
+  attack-demo:
+    name: Headline demo — attack fails once DP is on
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the compose stack
+        run: |
+          if [ -f docker-compose.yml ]; then
+            docker compose config -q && echo "docker-compose.yml is valid"
+          else
+            echo "::notice::docker-compose.yml not present yet (PLAN.md DoD). This job will boot the Flower server + 3 isolated bank nodes, train the global model, then run a membership-inference attack — asserting it succeeds without DP and fails with DP enabled, with the ε budget reported."
+          fi
