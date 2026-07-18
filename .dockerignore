@@ -1,0 +1,10 @@
+.git
+.github
+docs
+tests
+conftest.py
+__pycache__
+*.pyc
+.env
+.venv
+*.md

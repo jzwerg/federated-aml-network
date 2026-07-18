@@ -7,8 +7,8 @@
 # data, by design. Host ports for this project live in the 82xx range.
 
 x-bank: &bank
-  build: .                         # TODO(session): add Dockerfile (Python)
-  command: ["python", "-m", "client"]   # TODO(session): real client entrypoint
+  build: .                         # Python 3.12 image (CPU-only torch) — see Dockerfile
+  command: ["python", "-m", "client"]   # bank-node client entrypoint
   depends_on:
     server: { condition: service_started }
   environment:
@@ -18,8 +18,8 @@ x-bank: &bank
 
 services:
   server:
-    build: .                       # TODO(session): add Dockerfile (Python)
-    command: ["python", "-m", "server"]   # TODO(session): real server entrypoint
+    build: .                       # same Python 3.12 image as the clients
+    command: ["python", "-m", "server"]   # Flower FedAvg server + metrics endpoint
     environment:
       NUM_ROUNDS: "${NUM_ROUNDS:-3}"
       MIN_CLIENTS: "${MIN_CLIENTS:-3}"
