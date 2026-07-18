@@ -48,10 +48,17 @@ Differential privacy, the attack, hyperparameter tuning beyond "it converges."
 
 ---
 
-## M2 — Differential privacy layer
+## M2 — Differential privacy layer  ✅ done
 
 Make the privacy guarantee real and measurable, using the env vars already plumbed
 through compose (`DP_ENABLED`, `EPSILON`).
+
+*Landed:* Opacus DP-SGD on each client (`client/dp.py`), gated by `DP_ENABLED`;
+`EPSILON` treated as the target budget for the run, with the noise multiplier
+derived by Opacus and the cumulative ε accounted across rounds and reported on
+`:8200/metrics` (`epsilon_spent` / `target_epsilon`). Validated: with DP on the
+model still learns (mean val AUC ~0.87) while ε converges to ~5.0 — graceful
+degradation. `DP_ENABLED=false` reproduces the M1 vanilla path.
 
 ### Definition of done
 - Opacus gradient clipping + Gaussian noise applied on the **client** during local
@@ -68,7 +75,7 @@ The attack itself; careful ε optimization (pick a defensible value and state it
 
 ---
 
-## M3 — The headline attack/defense demo  *(what the README promises)*
+## M3 — The headline attack/defense demo  ⬅️ NEXT  *(what the README promises)*
 
 ### Definition of done
 - A membership-inference attack against the shared model.
@@ -102,6 +109,6 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 | --- | --- |
 | M0 (done) | 3 — Federated orchestration (skeleton) |
 | M1 (done) | 1 — Synthetic generator · 2 — Local model + training |
-| M2 | 4 — Differential privacy layer |
-| M3 | 5 — Attack demo |
+| M2 (done) | 4 — Differential privacy layer |
+| M3 (next) | 5 — Attack demo |
 | M4 | 6 — Polish |

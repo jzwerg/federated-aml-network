@@ -1,7 +1,8 @@
 """Flower server: wait for MIN_CLIENTS banks, run FedAvg, expose metrics on :8000.
 
-Scope is the first federated round only. Differential privacy / ε tuning and the
-attack demo are later milestones (see MILESTONE.md / PLAN.md).
+Aggregates FedAvg across the isolated bank clients and reports round number, mean
+local AUC, and — when DP is enabled — the ε privacy budget spent. The
+membership-inference attack demo is the next milestone (see ROADMAP.md M3).
 """
 
 import logging
@@ -12,6 +13,11 @@ import flwr as fl
 import uvicorn
 from fastapi import FastAPI
 
+
+def _env_bool(name: str, default: bool) -> bool:
+    return os.environ.get(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [server] %(message)s")
 log = logging.getLogger("server")
 
@@ -20,8 +26,11 @@ METRICS = {
     "rounds_completed": 0,
     "num_rounds_target": int(os.environ.get("NUM_ROUNDS", "3")),
     "min_clients": int(os.environ.get("MIN_CLIENTS", "3")),
+    "dp_enabled": _env_bool("DP_ENABLED", True),
+    "target_epsilon": float(os.environ.get("EPSILON", "5.0")),
     "latest_loss": None,
     "latest_auc": None,
+    "epsilon_spent": None,
 }
 
 app = FastAPI(title="Federated AML Network — metrics")
@@ -50,8 +59,21 @@ class MetricsFedAvg(fl.server.strategy.FedAvg):
         ]
         if losses:
             METRICS["latest_loss"] = sum(losses) / len(losses)
+        # ε is a per-client budget; report the max (worst-case budget spent).
+        epsilons = [
+            r.metrics["epsilon"]
+            for _, r in results
+            if r.metrics and "epsilon" in r.metrics
+        ]
+        if epsilons:
+            METRICS["epsilon_spent"] = max(epsilons)
         log.info(
-            "round %d: aggregated fit across %d client(s)", server_round, len(results)
+            "round %d: aggregated fit across %d client(s)%s",
+            server_round,
+            len(results),
+            f", epsilon spent={METRICS['epsilon_spent']:.3f}"
+            if METRICS["epsilon_spent"] is not None
+            else "",
         )
         return aggregated
 

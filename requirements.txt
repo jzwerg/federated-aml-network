@@ -7,5 +7,6 @@ torch==2.5.1+cpu
 flwr==1.13.1
 fastapi==0.115.6
 uvicorn==0.34.0
-numpy==2.1.3
+numpy==1.26.4          # pinned <2.0 for opacus 1.5.2 compatibility
+opacus==1.5.2
 pytest==8.3.4
