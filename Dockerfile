@@ -14,6 +14,7 @@ COPY common ./common
 COPY server ./server
 COPY client ./client
 COPY benchmark ./benchmark
+COPY demo ./demo
 
 # Default role; docker-compose overrides this per service.
 CMD ["python", "-m", "server"]

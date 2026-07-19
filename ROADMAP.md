@@ -75,7 +75,15 @@ The attack itself; careful ε optimization (pick a defensible value and state it
 
 ---
 
-## M3 — The headline attack/defense demo  ⬅️ NEXT  *(what the README promises)*
+## M3 — The headline attack/defense demo  ✅ done  *(what the README promises)*
+
+*Landed:* a loss-based membership-inference attack (`demo/`) run via `make demo`
+(`python -m demo`). It trains the shared model both ways and shows the attack
+*succeeds* against vanilla FedAvg (attack AUC ~0.65) and *fails* — falls to ~chance
+(~0.50) — once DP is on, printing the attack success rate and the ε spent. Wired
+into CI's `attack-demo` job and locked into the test suite. Label noise amplifies
+the (otherwise tiny-data) membership signal so the mechanism is visible; the DP
+collapse of the gap is the real result.
 
 ### Definition of done
 - A membership-inference attack against the shared model.
@@ -94,7 +102,7 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 
 ---
 
-## M4 — Polish
+## M4 — Polish  ⬅️ NEXT
 
 - ADR documenting the DP mechanism and the ε choice (defensible to a DPO/regulator).
 - Bake the collaboration-lift + attack results into CI as the real proof.
@@ -110,5 +118,5 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 | M0 (done) | 3 — Federated orchestration (skeleton) |
 | M1 (done) | 1 — Synthetic generator · 2 — Local model + training |
 | M2 (done) | 4 — Differential privacy layer |
-| M3 (next) | 5 — Attack demo |
-| M4 | 6 — Polish |
+| M3 (done) | 5 — Attack demo |
+| M4 (next) | 6 — Polish |

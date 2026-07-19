@@ -20,8 +20,8 @@ ps: ## Show running services
 benchmark: ## Collaboration lift — federated AUC vs. each bank's solo model
 	docker compose run --rm --no-deps server python -m benchmark
 
-demo: ## Headline demo — membership-inference attack fails once DP is on (TODO: wire up — see ROADMAP.md M3)
-	@echo "TODO: run the membership-inference attack; assert it succeeds without DP and fails with DP enabled; report epsilon."
+demo: ## Headline demo — membership-inference attack succeeds without DP, fails with DP
+	docker compose run --rm --no-deps server python -m demo
 
 test: ## Run the Python test suite
 	pytest -q

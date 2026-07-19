@@ -26,8 +26,8 @@ class BenchmarkConfig:
     seed: int = 0
 
 
-def _train_local(model: nn.Module, X: torch.Tensor, y: torch.Tensor,
-                 epochs: int, lr: float) -> None:
+def train_local(model: nn.Module, X: torch.Tensor, y: torch.Tensor,
+                epochs: int, lr: float) -> None:
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     loss_fn = nn.CrossEntropyLoss()
     model.train()
@@ -38,7 +38,7 @@ def _train_local(model: nn.Module, X: torch.Tensor, y: torch.Tensor,
         optimizer.step()
 
 
-def _weighted_average(params: List[List[np.ndarray]], sizes: List[int]) -> List[np.ndarray]:
+def weighted_average(params: List[List[np.ndarray]], sizes: List[int]) -> List[np.ndarray]:
     total = float(sum(sizes))
     return [
         sum(p[i] * (n / total) for p, n in zip(params, sizes))
@@ -80,7 +80,7 @@ def run_benchmark(config: BenchmarkConfig | None = None) -> Dict[str, object]:
         torch.manual_seed(cfg.seed)
         model = TabularNet()
         X, y = bank_tensors[b]
-        _train_local(model, X, y, total_epochs, cfg.lr)
+        train_local(model, X, y, total_epochs, cfg.lr)
         solo[b] = _auc_by_typology(model, test)
 
     # Federated model: FedAvg across the three slices.
@@ -92,10 +92,10 @@ def run_benchmark(config: BenchmarkConfig | None = None) -> Dict[str, object]:
             model = TabularNet()
             set_parameters(model, global_params)
             X, y = bank_tensors[b]
-            _train_local(model, X, y, cfg.local_epochs, cfg.lr)
+            train_local(model, X, y, cfg.local_epochs, cfg.lr)
             round_params.append(get_parameters(model))
             sizes.append(len(X))
-        global_params = _weighted_average(round_params, sizes)
+        global_params = weighted_average(round_params, sizes)
 
     fed_model = TabularNet()
     set_parameters(fed_model, global_params)
