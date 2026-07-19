@@ -34,10 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Validate the compose stack
+        run: docker compose config -q && echo "docker-compose.yml is valid"
+      - name: Run the membership-inference attack/defense demo
         run: |
-          if [ -f docker-compose.yml ]; then
-            docker compose config -q && echo "docker-compose.yml is valid"
-          else
-            echo "::notice::docker-compose.yml not present yet (PLAN.md DoD). This job will boot the Flower server + 3 isolated bank nodes, train the global model, then run a membership-inference attack — asserting it succeeds without DP and fails with DP enabled, with the ε budget reported."
-          fi
+          pip install -r requirements.txt
+          python -m demo

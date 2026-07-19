@@ -18,8 +18,31 @@ This also matches the natural dependency chain: you can't run a meaningful attac
 until there's a model worth attacking, and you can't show "collaboration lift"
 until the data has genuine cross-bank structure. So the milestones stack cleanly.
 
-Status note: as of M0 the README still reads "Planning phase." Flip it to reflect
-the working stack as part of M1.
+---
+
+## Resuming in a new session (handover)
+
+- **Where we are:** M0–M3 are done and pushed. **M4 (Polish) is next** — see its
+  section below for the checklist.
+- **Branch:** `claude/product-thinking-repos-cmbegm` (all work lives here). PR is
+  open against `main`.
+- **The four entrypoints, all working:** `make up` (federated round, metrics on
+  `:8200`), `make benchmark` (collaboration lift), `make demo` (attack succeeds
+  without DP / fails with DP), `make test` (pytest). DP is gated by `DP_ENABLED`.
+- **Validation without a Docker daemon** (e.g. a Claude Code web session):
+  `docker compose config -q` parses the stack; for `pytest`/`benchmark`/`demo`,
+  make a Python 3.12 venv and `pip install` the deps. Note the CPU-only wheel
+  `torch==2.5.1+cpu` comes from `download.pytorch.org`, which is often blocked by
+  the egress proxy in web sessions — install the plain PyPI `torch==2.5.1` in the
+  venv for local validation; the `+cpu` pin still resolves in the real Docker
+  build and in GitHub CI. A real boot must be verified on a machine with a Docker
+  daemon.
+- **Pinning gotcha:** `numpy` is held at `1.26.4` because `opacus==1.5.2` requires
+  `numpy<2.0`. Don't bump numpy without checking opacus.
+- **Code map:** `common/` (model, data generator + non-IID split, AUC metric),
+  `server/` + `client/` (Flower + the DP path in `client/dp.py`), `benchmark/`
+  (collaboration-lift), `demo/` (membership-inference attack). Shared FedAvg-sim
+  primitives live in `benchmark/core.py` (`train_local`, `weighted_average`).
 
 ---
 
@@ -75,7 +98,15 @@ The attack itself; careful ε optimization (pick a defensible value and state it
 
 ---
 
-## M3 — The headline attack/defense demo  ⬅️ NEXT  *(what the README promises)*
+## M3 — The headline attack/defense demo  ✅ done  *(what the README promises)*
+
+*Landed:* a loss-based membership-inference attack (`demo/`) run via `make demo`
+(`python -m demo`). It trains the shared model both ways and shows the attack
+*succeeds* against vanilla FedAvg (attack AUC ~0.65) and *fails* — falls to ~chance
+(~0.50) — once DP is on, printing the attack success rate and the ε spent. Wired
+into CI's `attack-demo` job and locked into the test suite. Label noise amplifies
+the (otherwise tiny-data) membership signal so the mechanism is visible; the DP
+collapse of the gap is the real result.
 
 ### Definition of done
 - A membership-inference attack against the shared model.
@@ -94,12 +125,20 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 
 ---
 
-## M4 — Polish
+## M4 — Polish  ⬅️ NEXT
 
-- ADR documenting the DP mechanism and the ε choice (defensible to a DPO/regulator).
-- Bake the collaboration-lift + attack results into CI as the real proof.
-- Terminal recording of the demo; flip README `Status` from "Planning" to live.
-- Consider scaling past three nodes and a contribution/fairness story (brief risks).
+Remaining work now that the pipeline is end-to-end (CI already runs the benchmark
+and attack as real proof; README status is live):
+
+- **ADR** documenting the DP mechanism and the ε choice — defensible to a DPO /
+  regulator (a follow-up to ADR 0001).
+- **Architecture diagram** refresh + a **terminal recording** of `make demo` for
+  the README (there's a placeholder line for it).
+- **Honesty pass on the demo's framing** in the README/docs: state plainly that
+  label noise + subsampled members amplify the membership signal on tiny data, so
+  the DP *collapse of the gap* is the result — not the absolute attack numbers.
+- **Optional stretch:** scale past three nodes; a contribution/fairness story for
+  data-poor banks (a key non-technical risk in the brief).
 
 ---
 
@@ -110,5 +149,5 @@ Defending against a *malicious aggregation server* — an explicitly stated boun
 | M0 (done) | 3 — Federated orchestration (skeleton) |
 | M1 (done) | 1 — Synthetic generator · 2 — Local model + training |
 | M2 (done) | 4 — Differential privacy layer |
-| M3 (next) | 5 — Attack demo |
-| M4 | 6 — Polish |
+| M3 (done) | 5 — Attack demo |
+| M4 (next) | 6 — Polish |

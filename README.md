@@ -59,6 +59,7 @@ See [`docs/product/brief.md`](./docs/product/brief.md) for the product thinking 
 ```bash
 docker compose up        # Flower server + 3 isolated bank nodes  (or: make up)
 make benchmark           # collaboration lift: federated AUC vs. each bank's solo model
+make demo                # membership-inference attack: succeeds without DP, fails with DP
 ```
 
 This is a simulation you run, not a site you visit — and the proof is in CI. Every push runs the attack demo in GitHub Actions: a membership-inference attack **succeeds against the vanilla model and fails once differential privacy is enabled**, with the ε budget reported. A green check means the privacy guarantee is real, not claimed.
@@ -67,4 +68,4 @@ This is a simulation you run, not a site you visit — and the proof is in CI. E
 
 ## Status
 
-🚧 Early implementation. **Done:** the stack boots a federated FedAvg round across three isolated bank nodes (metrics on `:8200`); a non-IID synthetic generator with injected fraud typologies (structuring, layering, cross-bank mule rings) shows the federated model beating every bank's solo model — `make benchmark`; and an Opacus differential-privacy layer (`DP_ENABLED`) trains each client with DP-SGD and reports the ε budget spent per run. **Next:** the membership-inference attack/defense demo that shows the attack succeeds without DP and fails with it. See [`ROADMAP.md`](./ROADMAP.md).
+🚧 Early implementation, end-to-end. **Done:** the stack boots a federated FedAvg round across three isolated bank nodes (metrics on `:8200`); a non-IID synthetic generator with injected fraud typologies (structuring, layering, cross-bank mule rings) shows the federated model beating every bank's solo model — `make benchmark`; an Opacus differential-privacy layer (`DP_ENABLED`) trains each client with DP-SGD and reports the ε budget spent; and `make demo` runs a membership-inference attack that **succeeds against vanilla FedAvg and fails once DP is enabled**, enforced in CI. **Next:** polish — an ADR for the DP/ε choice, a terminal recording, and scaling past three nodes. See [`ROADMAP.md`](./ROADMAP.md).
